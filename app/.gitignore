@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Copied from @excalidraw/excalidraw by scripts/copy-fonts.mjs
+public/fonts
