@@ -10,6 +10,8 @@
   --hover: #ececf4;
   --active: #e0dfff;
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  --accent-clean: #0b5cff;
+  --toolbar-bg: #ffffff;
   font-family: "Assistant", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -22,6 +24,8 @@
   --hover: #2a2a33;
   --active: #3a3870;
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  --accent-clean: #4d8bff;
+  --toolbar-bg: #232329;
 }
 
 * {
@@ -37,23 +41,36 @@ body,
   color: var(--text);
 }
 
-.layout {
+.app {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
 }
 
+.layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
 /* Excalidraw fills its parent: the parent needs an explicit height. */
 .canvas-wrap {
   flex: 1;
-  height: 100vh;
+  height: 100%;
   min-width: 0;
   position: relative;
 }
 
+.board {
+  position: relative;
+  height: 100%;
+}
+
 .board-loading {
-  height: 100vh;
+  height: 100%;
   display: grid;
   place-items: center;
   color: var(--muted);
@@ -67,7 +84,7 @@ body,
   flex-direction: column;
   background: var(--panel);
   border-right: 1px solid var(--border);
-  height: 100vh;
+  height: 100%;
 }
 
 .sidebar-header {
@@ -318,8 +335,231 @@ body,
 
 @media (max-width: 640px) {
   .sidebar {
-    position: fixed;
+    position: absolute;
+    top: 0;
+    bottom: 0;
     z-index: 15;
     box-shadow: var(--shadow);
+  }
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-name {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 9px;
+  background: var(--hover);
+}
+
+.segmented button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.segmented button:hover {
+  color: var(--text);
+}
+
+.segmented button.active {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.style-clean .segmented button.active {
+  color: var(--accent-clean);
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    grid-template-columns: 1fr auto;
+    padding: 0 10px;
+  }
+  .topbar-spacer {
+    display: none;
+  }
+  .segmented button {
+    padding: 5px 8px;
+  }
+}
+
+/* ---------- Clean (Zoom-style) board ---------- */
+/* Excalidraw's own shape toolbar is replaced by the left CleanToolbar. */
+.board-clean .excalidraw .App-menu_top .shapes-section {
+  visibility: hidden; /* not display:none, so the top bar layout (menu / library) doesn't shift */
+}
+
+/* Keep the selected-element properties panel clear of the left toolbar. */
+.board-clean .excalidraw .App-menu__left {
+  margin-left: 60px;
+}
+
+.clean-toolbar {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--toolbar-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.ct-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.ct-btn:hover,
+.ct-btn.open {
+  background: var(--hover);
+}
+
+.ct-btn.active {
+  background: color-mix(in srgb, var(--accent-clean) 14%, transparent);
+  color: var(--accent-clean);
+}
+
+.ct-sep {
+  width: 24px;
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border);
+}
+
+.ct-group {
+  position: relative;
+}
+
+/* Tiny corner triangle that opens a flyout. */
+.ct-more {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ct-more::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  border-left: 5px solid transparent;
+  border-bottom: 5px solid var(--muted);
+}
+
+.ct-more:hover::after {
+  border-bottom-color: var(--text);
+}
+
+.ct-swatch-dot {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.ct-flyout {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--toolbar-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.ct-colors {
+  flex-wrap: wrap;
+  width: 196px;
+  gap: 6px;
+}
+
+.ct-color {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.ct-color.active {
+  outline: 2px solid var(--accent-clean);
+  outline-offset: 1px;
+}
+
+.ct-hint {
+  font-size: 11px;
+  color: var(--muted);
+  width: 100%;
+}
+
+/* Excalidraw switches to its mobile toolbar under ~730px; keep that one there. */
+@media (max-width: 730px) {
+  .clean-toolbar {
+    display: none;
+  }
+  .board-clean .excalidraw .App-menu_top .shapes-section {
+    visibility: visible;
+  }
+  .board-clean .excalidraw .App-menu__left {
+    margin-left: 0;
   }
 }

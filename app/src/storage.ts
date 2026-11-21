@@ -16,8 +16,12 @@ export interface DrawingData {
   files: BinaryFiles;
 }
 
+export type BoardStyle = "sketch" | "clean";
+
 export interface Settings {
   theme: "light" | "dark";
+  /** "sketch" = stock Excalidraw look, "clean" = Zoom-style whiteboard skin. */
+  boardStyle: BoardStyle;
   lastOpenId?: string;
   sidebarOpen: boolean;
 }
@@ -26,7 +30,7 @@ const META_KEY = "meta";
 const SETTINGS_KEY = "settings";
 const drawingKey = (id: string) => `drawing:${id}`;
 
-const DEFAULT_SETTINGS: Settings = { theme: "light", sidebarOpen: true };
+const DEFAULT_SETTINGS: Settings = { theme: "light", boardStyle: "sketch", sidebarOpen: true };
 
 /** appState fields worth persisting (never `collaborators` — it's a Map). */
 const PERSISTED_APP_STATE_KEYS = [

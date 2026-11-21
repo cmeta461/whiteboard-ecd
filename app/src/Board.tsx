@@ -7,14 +7,19 @@ import type {
   ExcalidrawImperativeAPI,
   ExcalidrawInitialDataState,
 } from "@excalidraw/excalidraw/types";
-import { loadDrawing, saveDrawing, type DrawingData, type DrawingMeta } from "./storage";
+import { loadDrawing, saveDrawing, type BoardStyle, type DrawingData, type DrawingMeta } from "./storage";
+import { STYLE_DEFAULTS } from "./boardStyle";
+import CleanToolbar from "./CleanToolbar";
 
 const SAVE_DEBOUNCE_MS = 500;
+
+type ActiveToolType = AppState["activeTool"]["type"];
 
 interface BoardProps {
   drawingId: string;
   name: string;
   theme: "light" | "dark";
+  boardStyle: BoardStyle;
   onApi: (api: ExcalidrawImperativeAPI | null) => void;
   onSaved: (meta: DrawingMeta[]) => void;
   onThemeChange: (theme: "light" | "dark") => void;
@@ -25,8 +30,19 @@ interface BoardProps {
  * so switching drawings unmounts this component (flushing any pending save)
  * and mounts a fresh canvas with the other drawing's data.
  */
-export default function Board({ drawingId, name, theme, onApi, onSaved, onThemeChange }: BoardProps) {
+export default function Board({
+  drawingId,
+  name,
+  theme,
+  boardStyle,
+  onApi,
+  onSaved,
+  onThemeChange,
+}: BoardProps) {
   const [initialData, setInitialData] = useState<ExcalidrawInitialDataState | null>(null);
+  const [api, setApi] = useState<ExcalidrawImperativeAPI | null>(null);
+  const [activeTool, setActiveTool] = useState<ActiveToolType>("selection");
+  const activeToolRef = useRef<ActiveToolType>("selection");
   const pending = useRef<DrawingData | null>(null);
   const timer = useRef<number | undefined>(undefined);
   // Excalidraw fires onChange once on mount with the initial scene; skip saving that.
@@ -40,6 +56,8 @@ export default function Board({ drawingId, name, theme, onApi, onSaved, onThemeC
   const themeRef = useRef(theme);
   themeRef.current = theme;
   const lastReportedTheme = useRef<"light" | "dark" | null>(null);
+  const boardStyleRef = useRef(boardStyle);
+  boardStyleRef.current = boardStyle;
 
   const flush = useCallback(() => {
     window.clearTimeout(timer.current);
@@ -62,7 +80,12 @@ export default function Board({ drawingId, name, theme, onApi, onSaved, onThemeC
       const hasView = data?.appState?.scrollX !== undefined;
       setInitialData({
         elements,
-        appState: { ...(data?.appState ?? {}), theme: themeRef.current },
+        // Clean mode forces its defaults; sketch mode keeps whatever the drawing last used.
+        appState: {
+          ...(data?.appState ?? {}),
+          ...(boardStyleRef.current === "clean" ? STYLE_DEFAULTS.clean : {}),
+          theme: themeRef.current,
+        },
         files: data?.files ?? {},
         scrollToContent: !hasView && elements.length > 0,
       });
@@ -71,6 +94,15 @@ export default function Board({ drawingId, name, theme, onApi, onSaved, onThemeC
       cancelled = true;
     };
   }, [drawingId]);
+
+  // Switching style on an open board: swap the defaults for new elements (no remount).
+  const appliedStyle = useRef(boardStyle);
+  useEffect(() => {
+    if (!api || appliedStyle.current === boardStyle) return;
+    appliedStyle.current = boardStyle;
+    api.updateScene({ appState: STYLE_DEFAULTS[boardStyle] });
+    if (boardStyle === "clean") api.setActiveTool({ type: "selection" });
+  }, [api, boardStyle]);
 
   // Flush pending save when switching drawings / unmounting, and before the tab closes.
   useEffect(() => {
@@ -86,6 +118,11 @@ export default function Board({ drawingId, name, theme, onApi, onSaved, onThemeC
       // Propagate theme only when Excalidraw's own theme changed (user used its built-in toggle).
       // Comparing against our prop instead would ping-pong: onChange can still report the old
       // theme right after we pass a new one in.
+      if (appState.activeTool.type !== activeToolRef.current) {
+        activeToolRef.current = appState.activeTool.type;
+        setActiveTool(appState.activeTool.type);
+      }
+
       const prevTheme = lastReportedTheme.current;
       lastReportedTheme.current = appState.theme;
       if (prevTheme !== null && appState.theme !== prevTheme && appState.theme !== themeRef.current) {
@@ -109,36 +146,45 @@ export default function Board({ drawingId, name, theme, onApi, onSaved, onThemeC
     [flush],
   );
 
-  const handleApi = useCallback((api: ExcalidrawImperativeAPI) => onApi(api), [onApi]);
+  const handleApi = useCallback(
+    (api: ExcalidrawImperativeAPI) => {
+      setApi(api);
+      onApi(api);
+    },
+    [onApi],
+  );
   useEffect(() => () => onApi(null), [onApi]);
 
   if (!initialData) return <div className="board-loading">Loading…</div>;
 
   return (
-    <Excalidraw
-      initialData={initialData}
-      theme={theme}
-      name={name}
-      excalidrawAPI={handleApi}
-      onChange={handleChange}
-    >
-      {menu}
-    </Excalidraw>
+    <div className={`board board-${boardStyle}`}>
+      <Excalidraw
+        initialData={initialData}
+        theme={theme}
+        name={name}
+        excalidrawAPI={handleApi}
+        onChange={handleChange}
+      >
+        {menu}
+      </Excalidraw>
+      {boardStyle === "clean" && api && <CleanToolbar api={api} activeTool={activeTool} />}
+    </div>
   );
 }
 
 /** Same as the default menu, minus Excalidraw's social links. Created once (stable element). */
 const menu = (
-      <MainMenu>
-        <MainMenu.DefaultItems.LoadScene />
-        <MainMenu.DefaultItems.SaveToActiveFile />
-        <MainMenu.DefaultItems.Export />
-        <MainMenu.DefaultItems.SaveAsImage />
-        <MainMenu.DefaultItems.SearchMenu />
-        <MainMenu.DefaultItems.Help />
-        <MainMenu.DefaultItems.ClearCanvas />
-        <MainMenu.Separator />
-        <MainMenu.DefaultItems.ToggleTheme />
-        <MainMenu.DefaultItems.ChangeCanvasBackground />
-      </MainMenu>
+  <MainMenu>
+    <MainMenu.DefaultItems.LoadScene />
+    <MainMenu.DefaultItems.SaveToActiveFile />
+    <MainMenu.DefaultItems.Export />
+    <MainMenu.DefaultItems.SaveAsImage />
+    <MainMenu.DefaultItems.SearchMenu />
+    <MainMenu.DefaultItems.Help />
+    <MainMenu.DefaultItems.ClearCanvas />
+    <MainMenu.Separator />
+    <MainMenu.DefaultItems.ToggleTheme />
+    <MainMenu.DefaultItems.ChangeCanvasBackground />
+  </MainMenu>
 );

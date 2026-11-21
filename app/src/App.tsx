@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import Board from "./Board";
 import Sidebar from "./Sidebar";
+import TopBar from "./TopBar";
 import {
   createDrawing,
   deleteDrawing,
@@ -9,6 +10,7 @@ import {
   listDrawings,
   renameDrawing,
   setSettings,
+  type BoardStyle,
   type DrawingMeta,
   type Settings,
 } from "./storage";
@@ -41,6 +43,7 @@ export default function App() {
   const [drawings, setDrawings] = useState<DrawingMeta[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [boardStyle, setBoardStyle] = useState<BoardStyle>("sketch");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const apiRef = useRef<ExcalidrawImperativeAPI | null>(null);
@@ -51,6 +54,7 @@ export default function App() {
     void init().then(({ settings, drawings, id }) => {
       setDrawings(drawings);
       setTheme(settings.theme);
+      setBoardStyle(settings.boardStyle);
       setSidebarOpen(settings.sidebarOpen);
       setCurrentId(id);
       goTo(id);
@@ -91,6 +95,11 @@ export default function App() {
   const changeTheme = useCallback((next: "light" | "dark") => {
     setTheme(next);
     void setSettings({ theme: next });
+  }, []);
+
+  const changeBoardStyle = useCallback((next: BoardStyle) => {
+    setBoardStyle(next);
+    void setSettings({ boardStyle: next });
   }, []);
 
   const toggleSidebar = (open: boolean) => {
@@ -151,43 +160,47 @@ export default function App() {
   const current = drawings.find((d) => d.id === currentId);
 
   return (
-    <div className={`layout theme-${theme}`}>
-      {sidebarOpen ? (
-        <Sidebar
-          drawings={drawings}
-          currentId={currentId}
-          theme={theme}
-          error={error}
-          onSelect={select}
-          onCreate={handleCreate}
-          onRename={handleRename}
-          onDelete={handleDelete}
-          onImport={handleImport}
-          onExport={handleExport}
-          onToggleTheme={() => changeTheme(theme === "light" ? "dark" : "light")}
-          onCollapse={() => toggleSidebar(false)}
-        />
-      ) : (
-        <button
-          type="button"
-          className="sidebar-open-btn"
-          title="Show drawings"
-          onClick={() => toggleSidebar(true)}
-        >
-          »
-        </button>
-      )}
-      <main className="canvas-wrap">
-        <Board
-          key={currentId}
-          drawingId={currentId}
-          name={current?.name ?? "Untitled"}
-          theme={theme}
-          onApi={onApi}
-          onSaved={setDrawings}
-          onThemeChange={changeTheme}
-        />
-      </main>
+    <div className={`app theme-${theme} style-${boardStyle}`}>
+      <TopBar name={current?.name ?? "Untitled"} boardStyle={boardStyle} onStyleChange={changeBoardStyle} />
+      <div className="layout">
+        {sidebarOpen ? (
+          <Sidebar
+            drawings={drawings}
+            currentId={currentId}
+            theme={theme}
+            error={error}
+            onSelect={select}
+            onCreate={handleCreate}
+            onRename={handleRename}
+            onDelete={handleDelete}
+            onImport={handleImport}
+            onExport={handleExport}
+            onToggleTheme={() => changeTheme(theme === "light" ? "dark" : "light")}
+            onCollapse={() => toggleSidebar(false)}
+          />
+        ) : (
+          <button
+            type="button"
+            className="sidebar-open-btn"
+            title="Show drawings"
+            onClick={() => toggleSidebar(true)}
+          >
+            »
+          </button>
+        )}
+        <main className="canvas-wrap">
+          <Board
+            key={currentId}
+            drawingId={currentId}
+            name={current?.name ?? "Untitled"}
+            theme={theme}
+            boardStyle={boardStyle}
+            onApi={onApi}
+            onSaved={setDrawings}
+            onThemeChange={changeTheme}
+          />
+        </main>
+      </div>
     </div>
   );
 }
