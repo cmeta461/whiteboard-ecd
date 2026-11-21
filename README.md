@@ -1,6 +1,8 @@
 # Sketchboard
 
-A whiteboard website for hand-drawn style diagrams. It embeds the open-source
+A whiteboard website with two looks on the same canvas: the hand-drawn **Excalidraw** style and a
+clean **Zoom**-style whiteboard (floating toolbars, dot grid, sticky notes), handy for interview
+prep and system-design practice. It embeds the open-source
 [Excalidraw](https://github.com/excalidraw/excalidraw) canvas (MIT) and adds a drawings list,
 autosave, import/export and a light/dark theme. **No account, API key or backend is needed**, and
 once it is installed it runs fully offline.
@@ -12,6 +14,32 @@ once it is installed it runs fully offline.
 - Autosave: drawings are stored in your browser and are still there after a reload
 - Import `.excalidraw` / `.json` files; export `.excalidraw`, PNG and SVG
 - Light and dark mode
+- **Excalidraw | Zoom** toggle at the top center; drawings are shared between both styles and the
+  last style you used is remembered
+
+### Excalidraw style
+
+The stock Excalidraw UI: hand-drawn strokes, its own toolbar, properties panel and menu.
+
+### Zoom style
+
+A Zoom Whiteboard look and feel built on the same canvas (Excalidraw's own chrome is hidden;
+its keyboard shortcuts still work):
+
+- Light-grey canvas with a dot grid that pans and zooms with the drawing
+- Left toolbar: blue **+** insert button, then Select, Pan, Sticky notes, Pen, Highlighter, Eraser,
+  Shapes, Connector, Text and More (laser pointer, frame, image)
+- Shapes flyout with rectangle, diamond, ellipse, parallelogram, triangle, star, heart, cloud,
+  line, arrow and block arrow
+- Pen and highlighter popover: standard colour grid, custom colour and a weight slider
+  (click the tool again to open it)
+- Sticky notes in five colours (double-click a note to type)
+- Floating selection bar: fill and outline colour, weight, text size and alignment, duplicate, delete
+- Floating pills: board name and menu (top left), Export to PNG / SVG / `.excalidraw` (top right),
+  undo / redo (bottom left), zoom and fit-to-content (bottom right)
+
+Not built yet: real-time collaboration, Share, Present mode, templates and frames. This is an
+independent look-alike; it does not use the Zoom API or any Zoom code or branding.
 
 ## Requirements
 
@@ -73,18 +101,26 @@ Use **Export → .excalidraw** in the sidebar to back up a drawing, and **Import
 
 ```
 app/
-  src/App.tsx          startup, routing, sidebar actions
+  src/App.tsx          startup, routing, sidebar actions, style switch
   src/Board.tsx        wraps the Excalidraw canvas and debounced autosave
   src/Sidebar.tsx      drawings list, import/export, theme toggle
+  src/TopBar.tsx       top bar with the Excalidraw | Zoom toggle (Excalidraw style)
   src/storage.ts       IndexedDB storage for drawings and settings
   src/exporters.ts     .excalidraw / PNG / SVG export and file import
+  src/boardStyle.ts    per-style defaults, sticky notes, selection helpers
+  src/shapes.ts        extra shapes (triangle, star, heart, cloud, ...) as closed lines
+  src/CleanToolbar.tsx Zoom-style left toolbar, shapes flyout, pen popover
+  src/CleanChrome.tsx  Zoom-style floating pills: name/menu, export, undo/redo, zoom
+  src/CleanPropertiesBar.tsx  floating bar above the current selection
+  src/ColorPopover.tsx colour grid and weight slider
+  src/DotGrid.tsx      dotted canvas background that follows pan and zoom
   scripts/copy-fonts.mjs   copies Excalidraw fonts into public/fonts (runs before dev/build)
 ```
 
 ## Credits
 
 The canvas is [Excalidraw](https://github.com/excalidraw/excalidraw), used under the MIT license.
-Sketchboard is an independent project and is not affiliated with Excalidraw.
+Sketchboard is an independent project and is not affiliated with Excalidraw or Zoom.
 
 Sketchboard's own code is MIT licensed ([LICENSE](LICENSE)). Licenses and copyright notices for
 the libraries it uses are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
