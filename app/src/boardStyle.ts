@@ -9,6 +9,7 @@ type StyleDefaults = Pick<
   | "currentItemStrokeWidth"
   | "currentItemFillStyle"
   | "currentItemRoundness"
+  | "viewBackgroundColor"
 >;
 
 /**
@@ -23,6 +24,8 @@ export const STYLE_DEFAULTS: Record<BoardStyle, StyleDefaults> = {
     currentItemStrokeWidth: 1,
     currentItemFillStyle: "solid",
     currentItemRoundness: "round",
+    // Transparent so the CSS dot-grid behind the canvas shows through.
+    viewBackgroundColor: "transparent",
   },
   // Stock Excalidraw hand-drawn look.
   sketch: {
@@ -31,10 +34,52 @@ export const STYLE_DEFAULTS: Record<BoardStyle, StyleDefaults> = {
     currentItemStrokeWidth: 2,
     currentItemFillStyle: "hachure",
     currentItemRoundness: "round",
+    viewBackgroundColor: "#ffffff",
   },
 };
 
-export const STICKY_COLORS = ["#fff3a0", "#ffd6a5", "#ffc9de", "#c8f0d0", "#cfe3ff"] as const;
+export const STICKY_COLORS = ["#ffd09b", "#fff3a0", "#ffc9de", "#c8f0d0", "#cfe3ff"] as const;
+
+/** Elements currently selected on the canvas. */
+export function getSelected(api: ExcalidrawImperativeAPI) {
+  const ids = api.getAppState().selectedElementIds;
+  return api.getSceneElements().filter((el) => ids[el.id]);
+}
+
+/** Patch every selected element (plain props only - not size-affecting text props). */
+export function patchSelected(
+  api: ExcalidrawImperativeAPI,
+  patch: (el: ReturnType<typeof getSelected>[number]) => Record<string, unknown>,
+) {
+  const ids = api.getAppState().selectedElementIds;
+  const next = api.getSceneElements().map((el) =>
+    ids[el.id]
+      ? ({
+          ...el,
+          ...patch(el),
+          version: el.version + 1,
+          versionNonce: (Math.random() * 2 ** 31) | 0,
+          updated: Date.now(),
+        } as typeof el)
+      : el,
+  );
+  api.updateScene({ elements: next });
+}
+
+/** Fire a keyboard shortcut at Excalidraw (it listens on `document`). Used for undo/redo, font size. */
+export function sendShortcut(key: string, opts: { shift?: boolean } = {}) {
+  document.dispatchEvent(
+    new KeyboardEvent("keydown", {
+      key,
+      code: key.length === 1 && /[a-z]/i.test(key) ? `Key${key.toUpperCase()}` : undefined,
+      ctrlKey: true,
+      metaKey: true,
+      shiftKey: !!opts.shift,
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
+}
 
 const STICKY_SIZE = 200;
 

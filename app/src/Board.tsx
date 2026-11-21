@@ -10,6 +10,8 @@ import type {
 import { loadDrawing, saveDrawing, type BoardStyle, type DrawingData, type DrawingMeta } from "./storage";
 import { STYLE_DEFAULTS } from "./boardStyle";
 import CleanToolbar from "./CleanToolbar";
+import CleanPropertiesBar from "./CleanPropertiesBar";
+import DotGrid from "./DotGrid";
 
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -85,6 +87,9 @@ export default function Board({
           ...(data?.appState ?? {}),
           ...(boardStyleRef.current === "clean" ? STYLE_DEFAULTS.clean : {}),
           theme: themeRef.current,
+          ...(boardStyleRef.current === "sketch" && data?.appState?.viewBackgroundColor === "transparent"
+            ? { viewBackgroundColor: "#ffffff" }
+            : {}),
         },
         files: data?.files ?? {},
         scrollToContent: !hasView && elements.length > 0,
@@ -159,6 +164,7 @@ export default function Board({
 
   return (
     <div className={`board board-${boardStyle}`}>
+      {boardStyle === "clean" && <DotGrid api={api} />}
       <Excalidraw
         initialData={initialData}
         theme={theme}
@@ -168,7 +174,12 @@ export default function Board({
       >
         {menu}
       </Excalidraw>
-      {boardStyle === "clean" && api && <CleanToolbar api={api} activeTool={activeTool} />}
+      {boardStyle === "clean" && api && (
+        <>
+          <CleanToolbar api={api} activeTool={activeTool} />
+          <CleanPropertiesBar api={api} />
+        </>
+      )}
     </div>
   );
 }

@@ -7,8 +7,8 @@ interface TopBarProps {
 }
 
 const OPTIONS: { value: BoardStyle; label: string; hint: string }[] = [
-  { value: "sketch", label: "Sketch", hint: "Excalidraw-style hand-drawn whiteboard" },
-  { value: "clean", label: "Clean (Zoom-style)", hint: "Crisp shapes, left toolbar and sticky notes" },
+  { value: "sketch", label: "Excalidraw", hint: "Excalidraw-style hand-drawn whiteboard" },
+  { value: "clean", label: "Zoom", hint: "Zoom-style whiteboard: floating toolbars, sticky notes, dot grid" },
 ];
 
 export default function TopBar({ name, boardStyle, onStyleChange }: TopBarProps) {

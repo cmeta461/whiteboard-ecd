@@ -3,6 +3,7 @@ import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import Board from "./Board";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
+import CleanChrome from "./CleanChrome";
 import {
   createDrawing,
   deleteDrawing,
@@ -152,8 +153,10 @@ export default function App() {
     }
   };
 
-  const onApi = useCallback((api: ExcalidrawImperativeAPI | null) => {
-    apiRef.current = api;
+  const [api, setApi] = useState<ExcalidrawImperativeAPI | null>(null);
+  const onApi = useCallback((next: ExcalidrawImperativeAPI | null) => {
+    apiRef.current = next;
+    setApi(next);
   }, []);
 
   if (!ready || !currentId) return <div className="board-loading">Loading…</div>;
@@ -161,7 +164,9 @@ export default function App() {
 
   return (
     <div className={`app theme-${theme} style-${boardStyle}`}>
-      <TopBar name={current?.name ?? "Untitled"} boardStyle={boardStyle} onStyleChange={changeBoardStyle} />
+      {boardStyle === "sketch" && (
+        <TopBar name={current?.name ?? "Untitled"} boardStyle={boardStyle} onStyleChange={changeBoardStyle} />
+      )}
       <div className="layout">
         {sidebarOpen ? (
           <Sidebar
@@ -199,6 +204,19 @@ export default function App() {
             onSaved={setDrawings}
             onThemeChange={changeTheme}
           />
+          {boardStyle === "clean" && (
+            <CleanChrome
+              api={api}
+              name={current?.name ?? "Untitled"}
+              theme={theme}
+              sidebarOpen={sidebarOpen}
+              onRename={(n) => void handleRename(currentId, n)}
+              onStyleChange={changeBoardStyle}
+              onToggleSidebar={() => toggleSidebar(!sidebarOpen)}
+              onToggleTheme={() => changeTheme(theme === "light" ? "dark" : "light")}
+              onExport={(k) => void handleExport(k)}
+            />
+          )}
         </main>
       </div>
     </div>

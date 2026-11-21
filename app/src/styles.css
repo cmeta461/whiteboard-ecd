@@ -414,44 +414,115 @@ body,
 }
 
 /* ---------- Clean (Zoom-style) board ---------- */
-/* Excalidraw's own shape toolbar is replaced by the left CleanToolbar. */
-.board-clean .excalidraw .App-menu_top .shapes-section {
-  visibility: hidden; /* not display:none, so the top bar layout (menu / library) doesn't shift */
+.style-clean {
+  --canvas-bg: #f1f1f1;
+  --dot: #bdbdc2;
+  --pill-bg: #ffffff;
+  --pill-shadow: 0 2px 10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --zblue: #0b72ec;
+  --zblue-soft: #e4effd;
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
-/* Keep the selected-element properties panel clear of the left toolbar. */
-.board-clean .excalidraw .App-menu__left {
-  margin-left: 60px;
+.theme-dark.style-clean {
+  --canvas-bg: #1b1b1e;
+  --dot: #4a4a52;
+  --pill-bg: #2a2a30;
+  --pill-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  --zblue-soft: #1d3555;
+}
+
+.board-clean {
+  background: var(--canvas-bg);
+}
+
+.dot-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, var(--dot) 1.1px, transparent 1.6px);
+  background-size: 24px 24px;
+}
+
+/* Let the grid show through the (transparent) Excalidraw canvas. */
+.board-clean .excalidraw,
+.board-clean .excalidraw .excalidraw-container {
+  background: transparent !important;
+}
+
+/* Hide the stock Excalidraw chrome: our pills replace it. Keyboard shortcuts keep working. */
+.board-clean .excalidraw .App-menu_top,
+.board-clean .excalidraw .App-menu__left,
+.board-clean .excalidraw .App-bottom-bar,
+.board-clean .excalidraw .layer-ui__wrapper__top-right,
+.board-clean .excalidraw .layer-ui__wrapper__footer,
+.board-clean .excalidraw .layer-ui__wrapper__footer-left,
+.board-clean .excalidraw .layer-ui__wrapper__footer-right,
+.board-clean .excalidraw .layer-ui__wrapper__footer-center,
+.board-clean .excalidraw .help-icon,
+.board-clean .excalidraw .main-menu-trigger {
+  display: none !important;
+}
+
+/* ----- left toolbar ----- */
+.clean-toolbar-wrap {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .clean-toolbar {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   padding: 6px;
-  border-radius: 12px;
-  background: var(--toolbar-bg);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  width: 48px;
+  border-radius: 24px;
+  background: var(--pill-bg);
+  box-shadow: var(--pill-shadow);
+}
+
+.ct-plus {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--zblue);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(11, 114, 236, 0.45);
+}
+
+.ct-plus:hover {
+  filter: brightness(1.08);
 }
 
 .ct-btn {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   border: none;
-  border-radius: 8px;
+  border-radius: 50%;
   background: transparent;
   color: var(--text);
   cursor: pointer;
+}
+
+.ct-btn.ct-art {
+  width: 42px;
+  height: 40px;
+  border-radius: 10px;
 }
 
 .ct-btn:hover,
@@ -460,12 +531,12 @@ body,
 }
 
 .ct-btn.active {
-  background: color-mix(in srgb, var(--accent-clean) 14%, transparent);
-  color: var(--accent-clean);
+  background: var(--zblue-soft);
+  color: var(--zblue);
 }
 
 .ct-sep {
-  width: 24px;
+  width: 26px;
   height: 1px;
   margin: 4px 0;
   background: var(--border);
@@ -475,11 +546,10 @@ body,
   position: relative;
 }
 
-/* Tiny corner triangle that opens a flyout. */
 .ct-more {
   position: absolute;
-  right: 1px;
-  bottom: 1px;
+  right: 0;
+  bottom: 0;
   width: 12px;
   height: 12px;
   padding: 0;
@@ -497,33 +567,54 @@ body,
   border-bottom: 5px solid var(--muted);
 }
 
-.ct-more:hover::after {
-  border-bottom-color: var(--text);
-}
-
-.ct-swatch-dot {
-  position: absolute;
-  left: 6px;
-  bottom: 6px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+.ct-flyout,
+.ct-flyout-pop,
+.color-popover,
+.cc-menu,
+.pb-pop {
+  background: var(--pill-bg);
+  border-radius: 14px;
+  box-shadow: var(--pill-shadow);
 }
 
 .ct-flyout {
   position: absolute;
-  left: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 2px;
+  left: calc(100% + 14px);
+  top: 0;
   padding: 6px;
-  border-radius: 10px;
-  background: var(--toolbar-bg);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  display: flex;
+  gap: 2px;
+}
+
+.ct-flyout-pop {
+  position: absolute;
+  left: calc(100% + 14px);
+  top: -10px;
+  z-index: 2;
+}
+
+.ct-menu {
+  flex-direction: column;
+  min-width: 140px;
+}
+
+.ct-menu button,
+.cc-menu button {
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ct-menu button:hover,
+.cc-menu button:hover {
+  background: var(--hover);
 }
 
 .ct-colors {
@@ -535,13 +626,13 @@ body,
 .ct-color {
   width: 28px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   cursor: pointer;
 }
 
 .ct-color.active {
-  outline: 2px solid var(--accent-clean);
+  outline: 2px solid var(--zblue);
   outline-offset: 1px;
 }
 
@@ -551,15 +642,325 @@ body,
   width: 100%;
 }
 
-/* Excalidraw switches to its mobile toolbar under ~730px; keep that one there. */
-@media (max-width: 730px) {
-  .clean-toolbar {
-    display: none;
-  }
-  .board-clean .excalidraw .App-menu_top .shapes-section {
-    visibility: visible;
-  }
-  .board-clean .excalidraw .App-menu__left {
-    margin-left: 0;
+.shapes-pop {
+  padding: 10px;
+  width: 196px;
+  top: 0;
+}
+
+.shape-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.shape-grid .ct-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+}
+
+/* ----- colour popover ----- */
+.color-popover {
+  width: 152px;
+  padding: 12px;
+  font-size: 12px;
+}
+
+.cp-title {
+  color: var(--muted);
+  margin: 6px 0;
+  font-weight: 600;
+}
+
+.cp-title:first-child {
+  margin-top: 0;
+}
+
+.cp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.cp-swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 7px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+}
+
+.cp-swatch.active {
+  outline: 2px solid var(--zblue);
+  outline-offset: 1px;
+}
+
+.cp-custom {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.cp-custom input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.cp-range {
+  width: 100%;
+  accent-color: var(--zblue);
+}
+
+/* ----- floating chrome pills ----- */
+.cc-pill {
+  position: absolute;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 20px;
+  background: var(--pill-bg);
+  box-shadow: var(--pill-shadow);
+}
+
+.cc-topleft {
+  left: 14px;
+  top: 14px;
+  padding-left: 10px;
+}
+
+.cc-topcenter {
+  left: 50%;
+  top: 14px;
+  transform: translateX(-50%);
+  padding: 4px;
+}
+
+.cc-topright {
+  right: 14px;
+  top: 14px;
+}
+
+.cc-bottomleft {
+  left: 14px;
+  bottom: 14px;
+}
+
+.cc-bottomright {
+  right: 14px;
+  bottom: 14px;
+}
+
+.cc-name {
+  width: 170px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  text-overflow: ellipsis;
+}
+
+.cc-name:hover {
+  background: var(--hover);
+}
+
+.cc-name:focus {
+  outline: none;
+  border-color: var(--zblue);
+  background: var(--pill-bg);
+}
+
+.cc-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--text);
+}
+
+.cc-btn {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.cc-btn:hover {
+  background: var(--hover);
+}
+
+.cc-zoom {
+  font: inherit;
+  font-size: 13px;
+  min-width: 52px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: var(--zblue-soft);
+  color: var(--zblue);
+  cursor: pointer;
+}
+
+.cc-sep {
+  width: 1px;
+  height: 22px;
+  margin: 0 4px;
+  background: var(--border);
+}
+
+.cc-share {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 16px;
+  background: var(--zblue);
+  color: #fff;
+  cursor: pointer;
+}
+
+.cc-share:hover {
+  filter: brightness(1.08);
+}
+
+.cc-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  min-width: 200px;
+}
+
+.cc-menu-left {
+  left: 0;
+}
+
+.cc-menu-right {
+  right: 0;
+}
+
+/* ----- contextual properties bar ----- */
+.props-bar {
+  position: absolute;
+  z-index: 5;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 48px;
+  padding: 6px 10px;
+  border-radius: 16px;
+  background: var(--pill-bg);
+  box-shadow: var(--pill-shadow);
+}
+
+.pb-group {
+  position: relative;
+}
+
+.pb-btn {
+  min-width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.pb-btn:hover {
+  background: var(--hover);
+}
+
+.pb-btn.active {
+  background: var(--zblue-soft);
+  color: var(--zblue);
+}
+
+.pb-chip {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.pb-chip.empty {
+  background: linear-gradient(135deg, transparent 46%, #e03131 46%, #e03131 54%, transparent 54%);
+}
+
+.pb-chip.ring {
+  background: transparent;
+  border-width: 3px;
+}
+
+.pb-a {
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  border-bottom: 3px solid #000;
+  padding-bottom: 1px;
+}
+
+.pb-size {
+  min-width: 26px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.pb-sep {
+  width: 1px;
+  height: 22px;
+  margin: 0 6px;
+  background: var(--border);
+}
+
+.pb-pop {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  z-index: 3;
+}
+
+.pb-nofill {
+  display: block;
+  width: calc(100% - 24px);
+  margin: 0 12px 12px;
+  font: inherit;
+  font-size: 12px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .cc-name {
+    width: 110px;
   }
 }

@@ -23,9 +23,14 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 function currentScene(api: ExcalidrawImperativeAPI) {
+  const appState = api.getAppState();
   return {
     elements: api.getSceneElements(),
-    appState: api.getAppState(),
+    // Clean mode uses a transparent canvas; exports need a real background.
+    appState:
+      appState.viewBackgroundColor === "transparent"
+        ? { ...appState, viewBackgroundColor: "#ffffff" }
+        : appState,
     files: api.getFiles(),
   };
 }
